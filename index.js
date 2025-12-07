@@ -59,6 +59,7 @@ async function run() {
     const db = client.db("Chellange_Hive");
 
     const usersCollection = db.collection("users");
+    const creatorsCollection = db.collection("creators");
 
     // ===========
     // Admin verify token
@@ -71,9 +72,25 @@ async function run() {
       }
       next();
     };
+    // Creators related APIs -===*******=========
+    // -user request দিচ্ছে যে সে contest creator হবে 
+    app.post('/creators',async(req,res)=>{
+      const creatorsData=req.body
+      creatorsData.status='pending';
+      const result=await creatorsCollection.insertOne(creatorsData)
+      console.log(creatorsData);
+      res.send(result)
 
+      
+    })
+    // user এর request গুলা নেওয়া হচ্ছে যেটা admin দেখবে এবং creator হিসেবে accept ,reject করবে
+  app.get('/creators',async(req,res)=>{
+    const result=await creatorsCollection.find().toArray()
+    res.send(result)
+  })
+    // 
 
-    // User related APIs 
+    // User related APIs -===*******=========
 
     app.post('/users',async(req,res)=>{
       const usersData=req.body
@@ -90,6 +107,7 @@ async function run() {
       const result=await usersCollection.insertOne(usersData)
       res.send(result)
     })
+
   } finally {
    
   }
