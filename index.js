@@ -84,7 +84,7 @@ async function run() {
       
     })
     // user এর request গুলা নেওয়া হচ্ছে যেটা admin দেখবে এবং creator হিসেবে accept ,reject করবে
-  app.get('/creators',async(req,res)=>{
+  app.get('/creators', verifyFBtoken,async(req,res)=>{
     const result=await creatorsCollection.find().toArray()
     res.send(result)
   })
