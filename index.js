@@ -71,6 +71,25 @@ async function run() {
       }
       next();
     };
+
+
+    // User related APIs 
+
+    app.post('/users',async(req,res)=>{
+      const usersData=req.body
+      usersData.role="user"
+       const userEmail=req.body.email;
+        const filter={email: userEmail}
+        const exits=await usersCollection.findOne(filter)
+      if(exits){
+        return res.send({message: 'Already exits this user'})
+       
+      }
+
+
+      const result=await usersCollection.insertOne(usersData)
+      res.send(result)
+    })
   } finally {
    
   }
