@@ -88,6 +88,31 @@ async function run() {
     const result=await creatorsCollection.find().toArray()
     res.send(result)
   })
+  // এটা creator এর status update করার জন্য,যেমন approve reject 
+  app.patch('/updateCreators',async(req,res)=>{
+    const info=req.body
+    const email=req.body.email
+    const filterOnUser={email}
+    const filter={_id: new ObjectId(req.body.id)}
+    const updateStatus={
+      $set:{
+        status:req.body.status
+      }
+    }
+   if(req.body.status==='Approved'){
+     const updateUserRole={
+      $set:{
+        role:'creator'
+      }
+    }
+    const resultUser=await usersCollection.updateOne(filterOnUser,updateUserRole)
+    // res.send(resultUser)
+   }
+    // console.log(info);
+    const result=await creatorsCollection.updateOne(filter,updateStatus)
+    
+    res.send(result)
+  })
     // 
 
     // User related APIs -===*******=========
@@ -107,6 +132,14 @@ async function run() {
       const result=await usersCollection.insertOne(usersData)
       res.send(result)
     })
+    // Api for useRole custom hook create
+    app.get("/users/:email/role", verifyFBtoken, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const result = await usersCollection.findOne(filter);
+      res.send({ role: result?.role || "user" });
+    });
+
 
   } finally {
    
