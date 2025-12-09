@@ -60,6 +60,7 @@ async function run() {
 
     const usersCollection = db.collection("users");
     const creatorsCollection = db.collection("creators");
+    const contestCollection = db.collection("contest");
 
     // ===========
     // Admin verify token
@@ -72,13 +73,24 @@ async function run() {
       }
       next();
     };
+// ==========Contest related api=====
+// 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
+
+app.post('/contest',async(req,res)=>{
+  const data=req.body
+  const result=await contestCollection.insertOne(data)
+  res.send(result)
+  // console.log(data);
+  
+})
+
     // Creators related APIs -===*******=========
     // -user request দিচ্ছে যে সে contest creator হবে 
     app.post('/creators',async(req,res)=>{
       const creatorsData=req.body
       creatorsData.status='pending';
       const result=await creatorsCollection.insertOne(creatorsData)
-      console.log(creatorsData);
+     
       res.send(result)
 
       
@@ -159,6 +171,8 @@ async function run() {
       const email = req.params.email;
       const filter = { email };
       const result = await usersCollection.findOne(filter);
+  
+      
       res.send({ role: result?.role || "user" });
     });
 
