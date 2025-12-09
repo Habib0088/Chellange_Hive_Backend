@@ -117,6 +117,28 @@ async function run() {
 
     // User related APIs -===*******=========
 
+    // Api for get all the data of api
+    // এই api manageUsers page এ role Toggle করার জন্য use হবে
+    app.patch('/userRoleUpdate',async(req,res)=>{
+      const email=req.query.email;
+      const status=req.body
+      console.log(email,status);
+      const filter={email}
+      const updateRole={
+        $set:{
+          role:status.role
+        }
+      }
+      const result=await usersCollection.updateOne(filter,updateRole)
+
+      res.send(result)
+    })
+    
+    // এটা নেওয়া হচ্ছে Role Toogle করার জন্য manageUsers reute er জন্য
+    app.get('/manageUsers',async(req,res)=>{
+      const result=await usersCollection.find().toArray()
+      res.send(result)
+    })
     app.post('/users',async(req,res)=>{
       const usersData=req.body
       usersData.role="user"
