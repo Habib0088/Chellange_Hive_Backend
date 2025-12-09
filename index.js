@@ -73,15 +73,32 @@ async function run() {
       }
       next();
     };
+    // Admin verify token
+    const verifyCreator = async (req, res, next) => {
+      const email = req.decode_email;
+      const filter = { email };
+      const user = await usersCollection.findOne(filter);
+      if (!user || user.role !== "creator") {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      next();
+    };
 // ==========Contest related api=====
 // 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
 
-app.post('/contest',async(req,res)=>{
+app.post('/contest',verifyFBtoken,verifyCreator,async(req,res)=>{
   const data=req.body
   const result=await contestCollection.insertOne(data)
   res.send(result)
   // console.log(data);
   
+})
+// 2 This api for show contest of the indivisual user
+app.get('/myContest',async(req,res)=>{
+  const email=req.query.email
+  const filter={email};
+  const result=await contestCollection.find(filter).toArray()
+  res.send(result)
 })
 
     // Creators related APIs -===*******=========
