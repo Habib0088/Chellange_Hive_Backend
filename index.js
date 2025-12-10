@@ -158,7 +158,14 @@ app.delete('/deleteContestByAdmin/:id',verifyFBtoken,verifyAdmin,async(req,res)=
     })
     // 2. This api for getting all contest for in the AllContests Navbar
     app.get('/allContests',verifyFBtoken,async(req,res)=>{
-      const result=await contestCollection.find().toArray()
+      const result=await contestCollection.find({status:"Approved"}).toArray()
+      res.send(result)
+    })
+    // 3 getting data for show details of a contest
+    app.get('/contestDetails/:id',verifyFBtoken,async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id: new ObjectId(id)}
+      const result=await contestCollection.findOne(filter)
       res.send(result)
     })
     // Creators related APIs -===*******=========
