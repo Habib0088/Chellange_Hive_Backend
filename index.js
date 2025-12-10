@@ -140,7 +140,7 @@ app.patch('/updateContestStatus',async(req,res)=>{
   
 })
 // COntest delete by admin when he is approving in manage contest page
-app.delete('/deleteContestByAdmin/:id',async(req,res)=>{
+app.delete('/deleteContestByAdmin/:id',verifyFBtoken,verifyAdmin,async(req,res)=>{
   const id=req.params.id
   console.log(id);
   
@@ -148,16 +148,22 @@ app.delete('/deleteContestByAdmin/:id',async(req,res)=>{
   const result=await contestCollection.deleteOne(filter)
   res.send(result)
 })
-    // Contest delete api
-    app.delete('/contestDelete/:id',async(req,res)=>{
+    // Contest delete api==============================************+======================
+    // 1 This api for delete contest by creator
+    app.delete('/contestDelete/:id',verifyFBtoken,verifyCreator,async(req,res)=>{
       const id=req.params.id;
       const filter={_id: new ObjectId(id)}
       const result=await contestCollection.deleteOne(filter)
       res.send(result)
     })
+    // 2. This api for getting all contest for in the AllContests Navbar
+    app.get('/allContests',verifyFBtoken,async(req,res)=>{
+      const result=await contestCollection.find().toArray()
+      res.send(result)
+    })
     // Creators related APIs -===*******=========
     // -user request দিচ্ছে যে সে contest creator হবে
-    app.post("/creators", async (req, res) => {
+    app.post("/creators",verifyFBtoken,verifyCreator, async (req, res) => {
       const creatorsData = req.body;
       creatorsData.status = "pending";
       const result = await creatorsCollection.insertOne(creatorsData);
@@ -170,7 +176,7 @@ app.delete('/deleteContestByAdmin/:id',async(req,res)=>{
       res.send(result);
     });
     // এটা creator এর status update করার জন্য,যেমন approve reject
-    app.patch("/updateCreators", async (req, res) => {
+    app.patch("/updateCreators",verifyFBtoken,verifyAdmin, async (req, res) => {
       const info = req.body;
       const email = req.body.email;
       const filterOnUser = { email };
@@ -203,7 +209,7 @@ app.delete('/deleteContestByAdmin/:id',async(req,res)=>{
 
     // Api for get all the data of api
     // এই api manageUsers page এ role Toggle করার জন্য use হবে
-    app.patch("/userRoleUpdate", async (req, res) => {
+    app.patch("/userRoleUpdate",verifyFBtoken,verifyAdmin, async (req, res) => {
       const email = req.query.email;
       const status = req.body;
       console.log(email, status);
@@ -218,8 +224,8 @@ app.delete('/deleteContestByAdmin/:id',async(req,res)=>{
       res.send(result);
     });
 
-    // এটা নেওয়া হচ্ছে Role Toogle করার জন্য manageUsers reute er জন্য
-    app.get("/manageUsers", async (req, res) => {
+    // এটা নেওয়া হচ্ছে Role Toogle করার জন্য manageUsers route er জন্য by admin 
+    app.get("/manageUsers",verifyFBtoken,verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
