@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
+const stripe = require("stripe")(process.env.VITE_STRIPE_KEY);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -82,6 +83,40 @@ async function run() {
       }
       next();
     };
+
+    // +++============Payment Related apis
+    app.post("/create-checkout-session", async (req, res) => {
+      const paymentInfo = req.body;
+
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            // Provide the exact Price ID (for example, price_1234) of the product you want to sell
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: paymentInfo?.contestName,
+                description: paymentInfo?.description,
+                images: [paymentInfo?.contestPhoto],
+              },
+              unit_amount: paymentInfo?.price * 100,
+            },
+            quantity: paymentInfo?.quantity,
+          },
+        ],
+        customer_email: paymentInfo?.participant?.participantEmail,
+        mode: "payment",
+        metadata: {
+          contestId: paymentInfo.contestId,
+          participantEmail: paymentInfo?.participant?.participantEmail,
+          participantName: paymentInfo?.participant?.participantName,
+          participantPhoto: paymentInfo?.participant?.participatePhoto,
+        },
+        success_url: `${process.env.SITE_DOMAIN}paymentSuccess`,
+        cancel_url: `${process.env.SITE_DOMAIN}contestDetails/${paymentInfo.contestId}`,
+      });
+      res.send({ url: session.url });
+    });
     // ==========Contest related api=====
     // 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
 
@@ -113,64 +148,75 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       // console.log(data);
       const updateData = {
-        $set: data
+        $set: data,
       };
 
       const result = await contestCollection.updateOne(filter, updateData);
       res.send(result);
     });
-// Api for manage contest from admin reject apporve
-app.get('/manageContest',async(req,res)=>{
-  const result=await contestCollection.find().toArray()
-  res.send(result)
-})
-// 5 update status of contest
-app.patch('/updateContestStatus',async(req,res)=>{
-  const id=req.body.id
-  const status=req.body.status
-  const filter={_id: new ObjectId(id)}
-  const updateData={
-    $set:{
-      status:status
-    }
-  }
-  const result=await contestCollection.updateOne(filter,updateData)
-  res.send(result)
-  // console.log(status);
-  
-})
-// COntest delete by admin when he is approving in manage contest page
-app.delete('/deleteContestByAdmin/:id',verifyFBtoken,verifyAdmin,async(req,res)=>{
-  const id=req.params.id
-  console.log(id);
-  
-  const filter={_id: new ObjectId(id)}
-  const result=await contestCollection.deleteOne(filter)
-  res.send(result)
-})
+    // Api for manage contest from admin reject apporve
+    app.get("/manageContest", async (req, res) => {
+      const result = await contestCollection.find().toArray();
+      res.send(result);
+    });
+    // 5 update status of contest
+    app.patch("/updateContestStatus", async (req, res) => {
+      const id = req.body.id;
+      const status = req.body.status;
+      const filter = { _id: new ObjectId(id) };
+      const updateData = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await contestCollection.updateOne(filter, updateData);
+      res.send(result);
+      // console.log(status);
+    });
+    // COntest delete by admin when he is approving in manage contest page
+    app.delete(
+      "/deleteContestByAdmin/:id",
+      verifyFBtoken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        console.log(id);
+
+        const filter = { _id: new ObjectId(id) };
+        const result = await contestCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
     // Contest delete api==============================************+======================
     // 1 This api for delete contest by creator
-    app.delete('/contestDelete/:id',verifyFBtoken,verifyCreator,async(req,res)=>{
-      const id=req.params.id;
-      const filter={_id: new ObjectId(id)}
-      const result=await contestCollection.deleteOne(filter)
-      res.send(result)
-    })
+    app.delete(
+      "/contestDelete/:id",
+      verifyFBtoken,
+      verifyCreator,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await contestCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
     // 2. This api for getting all contest for in the AllContests Navbar
-    app.get('/allContests',verifyFBtoken,async(req,res)=>{
-      const result=await contestCollection.find({status:"Approved"}).toArray()
-      res.send(result)
-    })
+    app.get("/allContests", verifyFBtoken, async (req, res) => {
+      const result = await contestCollection
+        .find({ status: "Approved" })
+        .toArray();
+      res.send(result);
+    });
     // 3 getting data for show details of a contest
-    app.get('/contestDetails/:id',verifyFBtoken,async(req,res)=>{
-      const id=req.params.id;
-      const filter={_id: new ObjectId(id)}
-      const result=await contestCollection.findOne(filter)
-      res.send(result)
-    })
+    app.get("/contestDetails/:id", verifyFBtoken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await contestCollection.findOne(filter);
+      res.send(result);
+    });
     // Creators related APIs -===*******=========
     // -user request দিচ্ছে যে সে contest creator হবে
-    app.post("/creators",verifyFBtoken,verifyCreator, async (req, res) => {
+    app.post("/creators", verifyFBtoken, verifyCreator, async (req, res) => {
       const creatorsData = req.body;
       creatorsData.status = "pending";
       const result = await creatorsCollection.insertOne(creatorsData);
@@ -183,56 +229,66 @@ app.delete('/deleteContestByAdmin/:id',verifyFBtoken,verifyAdmin,async(req,res)=
       res.send(result);
     });
     // এটা creator এর status update করার জন্য,যেমন approve reject
-    app.patch("/updateCreators",verifyFBtoken,verifyAdmin, async (req, res) => {
-      const info = req.body;
-      const email = req.body.email;
-      const filterOnUser = { email };
-      const filter = { _id: new ObjectId(req.body.id) };
-      const updateStatus = {
-        $set: {
-          status: req.body.status,
-        },
-      };
-      if (req.body.status === "Approved") {
-        const updateUserRole = {
+    app.patch(
+      "/updateCreators",
+      verifyFBtoken,
+      verifyAdmin,
+      async (req, res) => {
+        const info = req.body;
+        const email = req.body.email;
+        const filterOnUser = { email };
+        const filter = { _id: new ObjectId(req.body.id) };
+        const updateStatus = {
           $set: {
-            role: "creator",
+            status: req.body.status,
           },
         };
-        const resultUser = await usersCollection.updateOne(
-          filterOnUser,
-          updateUserRole
-        );
-        // res.send(resultUser)
-      }
-      // console.log(info);
-      const result = await creatorsCollection.updateOne(filter, updateStatus);
+        if (req.body.status === "Approved") {
+          const updateUserRole = {
+            $set: {
+              role: "creator",
+            },
+          };
+          const resultUser = await usersCollection.updateOne(
+            filterOnUser,
+            updateUserRole
+          );
+          // res.send(resultUser)
+        }
+        // console.log(info);
+        const result = await creatorsCollection.updateOne(filter, updateStatus);
 
-      res.send(result);
-    });
+        res.send(result);
+      }
+    );
     //
 
     // User related APIs -===*******=========
 
     // Api for get all the data of api
     // এই api manageUsers page এ role Toggle করার জন্য use হবে
-    app.patch("/userRoleUpdate",verifyFBtoken,verifyAdmin, async (req, res) => {
-      const email = req.query.email;
-      const status = req.body;
-      console.log(email, status);
-      const filter = { email };
-      const updateRole = {
-        $set: {
-          role: status.role,
-        },
-      };
-      const result = await usersCollection.updateOne(filter, updateRole);
+    app.patch(
+      "/userRoleUpdate",
+      verifyFBtoken,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.query.email;
+        const status = req.body;
+        console.log(email, status);
+        const filter = { email };
+        const updateRole = {
+          $set: {
+            role: status.role,
+          },
+        };
+        const result = await usersCollection.updateOne(filter, updateRole);
 
-      res.send(result);
-    });
+        res.send(result);
+      }
+    );
 
-    // এটা নেওয়া হচ্ছে Role Toogle করার জন্য manageUsers route er জন্য by admin 
-    app.get("/manageUsers",verifyFBtoken,verifyAdmin, async (req, res) => {
+    // এটা নেওয়া হচ্ছে Role Toogle করার জন্য manageUsers route er জন্য by admin
+    app.get("/manageUsers", verifyFBtoken, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
