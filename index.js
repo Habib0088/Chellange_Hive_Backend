@@ -85,6 +85,7 @@ async function run() {
     };
 
     // +++============Payment Related apis
+    // 1 Payment checkout
     app.post("/create-checkout-session", async (req, res) => {
       const paymentInfo = req.body;
 
@@ -112,11 +113,23 @@ async function run() {
           participantName: paymentInfo?.participant?.participantName,
           participantPhoto: paymentInfo?.participant?.participatePhoto,
         },
-        success_url: `${process.env.SITE_DOMAIN}paymentSuccess`,
-        cancel_url: `${process.env.SITE_DOMAIN}contestDetails/${paymentInfo.contestId}`,
+        success_url: `${process.env.SITE_DOMAIN}paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.SITE_DOMAIN}paymentFailed`,
       });
       res.send({ url: session.url });
     });
+    // 2 payment success api
+    app.post('/paymentSuccess',async(req,res)=>{
+      const sessionId=req.body.sessionId
+      const session = await stripe.checkout.sessions.retrieve(sessionId)
+      console.log(session);
+      // from here the work is started for taking the participant in the array who have paid 
+      if(session.status){
+     
+        
+      }
+      
+    })
     // ==========Contest related api=====
     // 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
 
