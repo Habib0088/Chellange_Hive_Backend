@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 // Firebase Admin
 const admin = require("firebase-admin");
 const serviceAccount = require("./firebase-adminsdk.json");
+const e = require("express");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -154,18 +155,18 @@ async function run() {
     app.patch("/taskInfo/:id", verifyFBtoken, async (req, res) => {
       const id = req.params.id;
       const info = req.body;
-      const email=req.body.email
+      const email = req.body.email;
       const filter = {
         _id: new ObjectId(id),
         "participants.participantEmail": email,
       };
-      const updateData={
-        $push:{
-          "participants.$.taskInfo": info
-        }
-      }
-      const result=await contestCollection.updateOne(filter,updateData)
-      res.send(result)
+      const updateData = {
+        $push: {
+          "participants.$.taskInfo": info,
+        },
+      };
+      const result = await contestCollection.updateOne(filter, updateData);
+      res.send(result);
     });
     // ==========Contest related api=====
     // 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
@@ -203,6 +204,45 @@ async function run() {
 
       const result = await contestCollection.updateOne(filter, updateData);
       res.send(result);
+    });
+    // 5 api for getting info for active btn
+    app.get("/contest/participant", async (req, res) => {
+      const { contestId, email } = req.query;
+      if (!contestId || !email) {
+        res.send("Data mission");
+      }
+      console.log(contestId, email);
+      const contest = await contestCollection.findOne({
+        _id: new ObjectId(contestId),
+      });
+      const participant = contest.participants.find(
+        (p) => p.participantEmail === email
+      );
+
+      res.send(participant);
+      // console.log(participant);
+    });
+    // 6 api for showing contest participants in submission
+    app.get("/submission/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const filter = await contestCollection.findOne({ _id: new ObjectId(id) });
+
+      res.send(filter);
+    });
+    // 7 api for define the winner
+    app.patch(`/declareWinner/:id`, async (req, res) => {
+      const id = req.params.id;
+      const {email} = req.query;
+      console.log(email);
+
+      const filter = { _id: new ObjectId(id) };
+      const result = await contestCollection.findOne(filter);
+      const update={
+        $set:{winner:email}
+      }
+    const updatedResult=await contestCollection.updateOne(filter,update)
+      res.send(updatedResult);
     });
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
