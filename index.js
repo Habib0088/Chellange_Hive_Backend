@@ -119,17 +119,54 @@ async function run() {
       res.send({ url: session.url });
     });
     // 2 payment success api
-    app.post('/paymentSuccess',async(req,res)=>{
-      const sessionId=req.body.sessionId
-      const session = await stripe.checkout.sessions.retrieve(sessionId)
-      console.log(session);
-      // from here the work is started for taking the participant in the array who have paid 
-      if(session.status){
-     
-        
+    app.post("/paymentSuccess", async (req, res) => {
+      const sessionId = req.body.sessionId;
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      const participantInfo = {
+        transactionId: session.payment_intent,
+        participantName: session.metadata.participantName,
+        participantEmail: session.metadata.participantEmail,
+        participantPhoto: session.metadata.participantPhoto,
+        paymentStatus: "paid",
+      };
+      // console.log(session);
+      // from here the work is started for taking the participant in the array who have paid
+      if (session.status === "complete") {
+        // const
+        const filter = { _id: new ObjectId(session.metadata.contestId) };
+        // Check existance of the user
+        const alreadyExists = await contestCollection.findOne({
+          _id: new ObjectId(session.metadata.contestId),
+          "participants.participantEmail": participantInfo.participantEmail,
+        });
+
+        if (alreadyExists) {
+          return res.send({ message: "Already Available" });
+        }
+        const update = {
+          $push: { participants: participantInfo },
+        };
+        const result = await contestCollection.updateOne(filter, update);
+        return res.send(result);
       }
-      
-    })
+    });
+    // 3 after making payment post the link or info to the server
+    app.patch("/taskInfo/:id", verifyFBtoken, async (req, res) => {
+      const id = req.params.id;
+      const info = req.body;
+      const email=req.body.email
+      const filter = {
+        _id: new ObjectId(id),
+        "participants.participantEmail": email,
+      };
+      const updateData={
+        $push:{
+          "participants.$.taskInfo": info
+        }
+      }
+      const result=await contestCollection.updateOne(filter,updateData)
+      res.send(result)
+    });
     // ==========Contest related api=====
     // 1.এটা Create Contest form থেকে data পাঠানো হচ্ছে database এ add করার জন্য
 
