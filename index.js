@@ -244,6 +244,13 @@ async function run() {
     const updatedResult=await contestCollection.updateOne(filter,update)
       res.send(updatedResult);
     });
+    // 8 api for show winner in details page with picture
+    app.get('/winnerForDetails',async(req,res)=>{
+      const {email}=req.query
+      const filter=await usersCollection.findOne({email})
+      console.log(filter);
+      res.send(filter)
+    })
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
       const result = await contestCollection.find().toArray();
