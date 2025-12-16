@@ -233,24 +233,38 @@ async function run() {
     // 7 api for define the winner
     app.patch(`/declareWinner/:id`, async (req, res) => {
       const id = req.params.id;
-      const {email} = req.query;
+      const { email } = req.query;
       console.log(email);
 
       const filter = { _id: new ObjectId(id) };
       const result = await contestCollection.findOne(filter);
-      const update={
-        $set:{winner:email}
-      }
-    const updatedResult=await contestCollection.updateOne(filter,update)
+      const update = {
+        $set: { winner: email },
+      };
+      const updatedResult = await contestCollection.updateOne(filter, update);
       res.send(updatedResult);
     });
     // 8 api for show winner in details page with picture
-    app.get('/winnerForDetails',async(req,res)=>{
-      const {email}=req.query
-      const filter=await usersCollection.findOne({email})
+    app.get("/winnerForDetails", async (req, res) => {
+      const { email } = req.query;
+      const filter = await usersCollection.findOne({ email });
       console.log(filter);
-      res.send(filter)
-    })
+      res.send(filter);
+    });
+    // Api for My participated contest by user
+    app.get("/myParticipatedContests", async (req, res) => {
+      const { email } = req.query;
+
+      const result = await contestCollection
+        .find({
+          "participants.participantEmail": email,
+          winner: { $exists: false },
+        })
+        .sort({ deadline: 1 })
+        .toArray();
+
+      res.send(result);
+    });
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
       const result = await contestCollection.find().toArray();
