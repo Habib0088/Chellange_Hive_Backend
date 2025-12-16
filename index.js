@@ -278,6 +278,37 @@ async function run() {
         console.error(error);
       }
     });
+    // 11.Api for aggregation pipeline
+    app.get('/user/stats', async (req, res) => {
+  const { email } = req.query;
+
+  const pipeline = [
+    {
+      $match: {
+        "participants.participantEmail": email
+      }
+    },
+    {
+      $project: {
+        participated: 1,
+        isWinner: {
+          $cond: [{ $eq: ["$winner", email] }, 1, 0]
+        }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalParticipated: { $sum: 1 },
+        totalWon: { $sum: "$isWinner" }
+      }
+    }
+  ];
+
+  const result = await contestCollection.aggregate(pipeline).toArray();
+  res.send(result[0] || { totalParticipated: 0, totalWon: 0 });
+});
+
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
       const result = await contestCollection.find().toArray();
@@ -447,13 +478,15 @@ async function run() {
     app.patch('/updateProfile',async(req,res)=>{
       try {
         const {email}=req.query;
-        const {displayName,photoURL}=req.body;
-      console.log(typeof(photoURL));
+        const {displayName,photoURL,Bio}=req.body;
+      console.log(Bio);
       const filter={email}
+      
       const updateDoc={
         $set:{
           displayName:displayName,
-          photoURL:photoURL
+          photoURL:photoURL,
+          Bio:Bio
 
         }
       }
