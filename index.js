@@ -239,7 +239,10 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const result = await contestCollection.findOne(filter);
       const update = {
-        $set: { winner: email },
+        $set: {
+           winner: email,
+          declarationTime:new Date()
+         },
       };
       const updatedResult = await contestCollection.updateOne(filter, update);
       res.send(updatedResult);
@@ -251,6 +254,11 @@ async function run() {
       console.log(filter);
       res.send(filter);
     });
+    // api for winner advertisement
+    app.get('/winnerAdvertisement',async(req,res)=>{
+      const result=await contestCollection.find().limit(1).sort({declarationTime:-1}).toArray()
+      res.send(result)
+    })
     // 9 Api for My participated contest by user
     app.get("/myParticipatedContests", async (req, res) => {
       const { email } = req.query;
@@ -308,6 +316,47 @@ async function run() {
   const result = await contestCollection.aggregate(pipeline).toArray();
   res.send(result[0] || { totalParticipated: 0, totalWon: 0 });
 });
+// Api for popular section contest show by card
+app.get('/contestsPopular',async(req,res)=>{
+const result = await contestCollection.aggregate([
+  {
+    $addFields: {
+      participantsCount: {
+        $cond: [{ $isArray: "$participants" }, { $size: "$participants" }, 0]
+      }
+    }
+  },
+  { $sort: { participantsCount: -1 } }, // descending
+  { $limit: 6 }
+]).toArray();
+  res.send(result)
+})
+    // app.get("/contestsPopular", async (req, res) => {
+    //   try {
+    //     const result = await contestCollection
+    //       .aggregate([
+    //         {
+    //           $addFields: {
+    //             participantsCount: {
+    //               $cond: [
+    //                 { $isArray: "$participants" },
+    //                 { $size: "$participants" },
+    //                 0,
+    //               ],
+    //             },
+    //           },
+    //         },
+    //         { $sort: { participantsCount: -1 } },
+    //         { $limit: 6 },
+    //       ])
+    //       .toArray();
+
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).send({ message: "Server error" });
+    //   }
+    // });
 
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
