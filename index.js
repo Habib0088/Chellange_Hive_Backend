@@ -443,6 +443,27 @@ async function run() {
       const result=await usersCollection.findOne({email})
       res.send(result)
     })
+    // 2 update profile
+    app.patch('/updateProfile',async(req,res)=>{
+      try {
+        const {email}=req.query;
+        const {displayName,photoURL}=req.body;
+      console.log(typeof(photoURL));
+      const filter={email}
+      const updateDoc={
+        $set:{
+          displayName:displayName,
+          photoURL:photoURL
+
+        }
+      }
+      const result=await usersCollection.updateOne(filter,updateDoc)
+      res.send(result)
+        
+      } catch (error) {
+        console.log(error)
+      }
+    })
   } finally {
   }
 }
