@@ -437,6 +437,12 @@ async function run() {
 
       res.send({ role: result?.role || "user" });
     });
+    // 1. api for profile
+    app.get('/users/profile',async(req,res)=>{
+      const {email}=req.query;
+      const result=await usersCollection.findOne({email})
+      res.send(result)
+    })
   } finally {
   }
 }
