@@ -251,7 +251,7 @@ async function run() {
       console.log(filter);
       res.send(filter);
     });
-    // Api for My participated contest by user
+    // 9 Api for My participated contest by user
     app.get("/myParticipatedContests", async (req, res) => {
       const { email } = req.query;
 
@@ -264,6 +264,19 @@ async function run() {
         .toArray();
 
       res.send(result);
+    });
+    // 10. APi for myWinningContests by user
+    app.get("/myWinningContests", async (req, res) => {
+      try {
+        const { email } = req.query;
+
+        const result = await contestCollection
+          .find({ winner: email })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+      }
     });
     // Api for manage contest from admin reject apporve
     app.get("/manageContest", async (req, res) => {
