@@ -114,6 +114,7 @@ async function run() {
           participantName: paymentInfo?.participant?.participantName,
           participantPhoto: paymentInfo?.participant?.participatePhoto,
         },
+
         success_url: `${process.env.SITE_DOMAIN}paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.SITE_DOMAIN}paymentFailed`,
       });
@@ -178,14 +179,14 @@ async function run() {
       // console.log(data);
     });
     // 2 This api for show contest of the indivisual user
-    app.get("/myContest", async (req, res) => {
+    app.get("/myContest",verifyFBtoken, async (req, res) => {
       const email = req.query.email;
       const filter = { email };
       const result = await contestCollection.find(filter).toArray();
       res.send(result);
     });
     // 3 Api for getting the prefield form
-    app.get("/contestForEdit/:id", async (req, res) => {
+    app.get("/contestForEdit/:id",verifyFBtoken, async (req, res) => {
       const id = req.params.id;
 
       const filterId = { _id: new ObjectId(id) };
@@ -193,7 +194,7 @@ async function run() {
       res.send(result);
     });
     // 4 api for edit contest
-    app.patch("/updateContest/:id", async (req, res) => {
+    app.patch("/updateContest/:id",verifyFBtoken, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -206,7 +207,7 @@ async function run() {
       res.send(result);
     });
     // 5 api for getting info for active btn
-    app.get("/contest/participant", async (req, res) => {
+    app.get("/contest/participant",verifyFBtoken, async (req, res) => {
       const { contestId, email } = req.query;
       if (!contestId || !email) {
         res.send("Data mission");
@@ -223,7 +224,7 @@ async function run() {
       // console.log(participant);
     });
     // 6 api for showing contest participants in submission
-    app.get("/submission/:id", async (req, res) => {
+    app.get("/submission/:id",verifyFBtoken, async (req, res) => {
       const id = req.params.id;
 
       const filter = await contestCollection.findOne({ _id: new ObjectId(id) });
@@ -231,7 +232,7 @@ async function run() {
       res.send(filter);
     });
     // 7 api for define the winner
-    app.patch(`/declareWinner/:id`, async (req, res) => {
+    app.patch(`/declareWinner/:id`,verifyFBtoken, async (req, res) => {
       const id = req.params.id;
       const { email } = req.query;
       console.log(email);
@@ -248,19 +249,19 @@ async function run() {
       res.send(updatedResult);
     });
     // 8 api for show winner in details page with picture
-    app.get("/winnerForDetails", async (req, res) => {
+    app.get("/winnerForDetails",verifyFBtoken, async (req, res) => {
       const { email } = req.query;
       const filter = await usersCollection.findOne({ email });
       console.log(filter);
       res.send(filter);
     });
     // api for winner advertisement
-    app.get('/winnerAdvertisement',async(req,res)=>{
+    app.get('/winnerAdvertisement',verifyFBtoken,async(req,res)=>{
       const result=await contestCollection.find().limit(1).sort({declarationTime:-1}).toArray()
       res.send(result)
     })
     // 9 Api for My participated contest by user
-    app.get("/myParticipatedContests", async (req, res) => {
+    app.get("/myParticipatedContests",verifyFBtoken, async (req, res) => {
       const { email } = req.query;
 
       const result = await contestCollection
@@ -287,7 +288,7 @@ async function run() {
       }
     });
     // 11.Api for aggregation pipeline
-    app.get('/user/stats', async (req, res) => {
+    app.get('/user/stats',verifyFBtoken, async (req, res) => {
   const { email } = req.query;
 
   const pipeline = [
@@ -317,7 +318,7 @@ async function run() {
   res.send(result[0] || { totalParticipated: 0, totalWon: 0 });
 });
 // Api for popular section contest show by card
-app.get('/contestsPopular',async(req,res)=>{
+app.get('/contestsPopular',verifyFBtoken,async(req,res)=>{
 const result = await contestCollection.aggregate([
   {
     $addFields: {
@@ -359,12 +360,12 @@ const result = await contestCollection.aggregate([
     // });
 
     // Api for manage contest from admin reject apporve
-    app.get("/manageContest", async (req, res) => {
+    app.get("/manageContest",verifyFBtoken, async (req, res) => {
       const result = await contestCollection.find().toArray();
       res.send(result);
     });
     // 5 update status of contest
-    app.patch("/updateContestStatus", async (req, res) => {
+    app.patch("/updateContestStatus",verifyFBtoken, async (req, res) => {
       const id = req.body.id;
       const status = req.body.status;
       const filter = { _id: new ObjectId(id) };
@@ -518,13 +519,13 @@ const result = await contestCollection.aggregate([
       res.send({ role: result?.role || "user" });
     });
     // 1. api for profile
-    app.get('/users/profile',async(req,res)=>{
+    app.get('/users/profile',verifyFBtoken,async(req,res)=>{
       const {email}=req.query;
       const result=await usersCollection.findOne({email})
       res.send(result)
     })
     // 2 update profile
-    app.patch('/updateProfile',async(req,res)=>{
+    app.patch('/updateProfile',verifyFBtoken,async(req,res)=>{
       try {
         const {email}=req.query;
         const {displayName,photoURL,Bio}=req.body;
