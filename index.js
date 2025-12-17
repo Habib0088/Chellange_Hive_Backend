@@ -194,7 +194,7 @@ async function run() {
       res.send(result);
     });
     // 4 api for edit contest
-    app.patch("/updateContest/:id",verifyFBtoken, async (req, res) => {
+    app.patch("/updateContest/:id",verifyFBtoken,verifyCreator, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -224,7 +224,7 @@ async function run() {
       // console.log(participant);
     });
     // 6 api for showing contest participants in submission
-    app.get("/submission/:id",verifyFBtoken, async (req, res) => {
+    app.get("/submission/:id",verifyFBtoken,verifyCreator, async (req, res) => {
       const id = req.params.id;
 
       const filter = await contestCollection.findOne({ _id: new ObjectId(id) });
@@ -232,7 +232,7 @@ async function run() {
       res.send(filter);
     });
     // 7 api for define the winner
-    app.patch(`/declareWinner/:id`,verifyFBtoken, async (req, res) => {
+    app.patch(`/declareWinner/:id`,verifyFBtoken,verifyCreator, async (req, res) => {
       const id = req.params.id;
       const { email } = req.query;
       console.log(email);
@@ -256,7 +256,7 @@ async function run() {
       res.send(filter);
     });
     // api for winner advertisement
-    app.get('/winnerAdvertisement',verifyFBtoken,async(req,res)=>{
+    app.get('/winnerAdvertisement',async(req,res)=>{
       const result=await contestCollection.find().limit(1).sort({declarationTime:-1}).toArray()
       res.send(result)
     })
@@ -318,7 +318,7 @@ async function run() {
   res.send(result[0] || { totalParticipated: 0, totalWon: 0 });
 });
 // Api for popular section contest show by card
-app.get('/contestsPopular',verifyFBtoken,async(req,res)=>{
+app.get('/contestsPopular',async(req,res)=>{
 const result = await contestCollection.aggregate([
   {
     $addFields: {
@@ -406,7 +406,7 @@ const result = await contestCollection.aggregate([
       }
     );
     // 2. This api for getting all contest for in the AllContests Navbar
-    app.get("/allContests", verifyFBtoken, async (req, res) => {
+    app.get("/allContests", async (req, res) => {
       const result = await contestCollection
         .find({ status: "Approved" })
         .toArray();
