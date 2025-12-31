@@ -1,30 +1,30 @@
-Challenge Hive
+⦿ Challenge Hive
 
-Project Overview:
+⦿ Project Overview:
 Challenge Hive is a contest management web application built with the MERN stack and Firebase. It supports three role-based users and provides a smooth platform to create, participate, and manage contests.
 
 
-Main Technologies Used:
+⦿ Main Technologies Used:
 
-Frontend: React, Tailwind CSS, React Router, React Icons, Axios
+● Frontend: React, Tailwind CSS, React Router, React Icons, Axios
 
-Backend: Node.js, Express.js, MongoDB (Mongoose)
+● Backend: Node.js, Express.js, MongoDB (Mongoose)
 
-Authentication & Hosting: Firebase (Auth & Firestore)
+● Authentication & Hosting: Firebase (Auth & Firestore)
 
-Core Features:
+⦿ Core Features:
 
-Role-based user access (Admin, Contest Creator, Participant)
+● Role-based user access (Admin, Contest Creator, Participant)
 
-Firebase authentication
+● Firebase authentication
 
-Create, manage, and participate in contests
+● Create, manage, and participate in contests
 
-Responsive and user-friendly UI
+● Responsive and user-friendly UI
 
-Real-time data updates with Firebase
+● Real-time data updates with Firebase
 
-Dependencies Used (Frontend):
+⦿ Dependencies Used (Frontend):
 
 react
 
@@ -38,7 +38,7 @@ axios
 
 firebase
 
-Dependencies Used (Backend):
+⦿ Dependencies Used (Backend):
 
 express
 
@@ -50,7 +50,7 @@ dotenv
 
 jsonwebtoken
 
-Step-by-Step Guide to Run Locally:
+⦿ Step-by-Step Guide to Run Locally:
 
 Frontend:
 
@@ -63,7 +63,7 @@ Install dependencies:
 npm install
 
 
-Set up environment variables:
+⦿ Set up environment variables:
 Create a .env file with Firebase config.
 
 Start the app:
@@ -71,14 +71,13 @@ Start the app:
 npm start
 
 
-Open in browser: http://localhost:3000
+⦿ Open in browser: http://localhost:3000
 
-Backend:
+⦿ Backend:
 
 Clone the backend repo:
 
-git clone <backend-repo-url>
-cd <backend-folder>
+git clone 
 
 
 Install dependencies:
@@ -86,10 +85,10 @@ Install dependencies:
 npm install
 
 
-Set up environment variables:
+⦿ Set up environment variables:
 Create a .env file with MongoDB URI, Firebase config, and JWT secret.
 
-Start the server:
+⦿ Start the server:
 
 npm run server
 
